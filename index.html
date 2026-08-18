@@ -1169,7 +1169,7 @@ function renderGame() {
   opponents.forEach(p => {
     html += `<div class="opp-badge ${turnIdx === p.id ? 'active' : ''} ${G.dealerIndex === p.id ? 'dealer' : ''}">
       <div class="opp-name" style="color:${teamColor(p.team)};">${p.name} ${p.team === 'solo' ? '⭐' : ''}</div>
-      <div class="opp-info">${teamLabel(p.team)}</div>
+      <div class="opp-info" style="color:${teamColor(p.team)}; font-weight:700;">${teamLabel(p.team)}</div>
       <div class="opp-info">Bid: ${p.bid === null ? '-' : p.bid} · Won: ${p.tricksWon} · Cards: ${p.hand ? p.hand.length : 0}</div>
       <div class="opp-info">VP: ${Math.round(p.vp)}${G.useMajors ? ' · ✦' + p.arcana.length : ''}</div>
     </div>`;
@@ -1192,7 +1192,7 @@ function renderGame() {
   html += `</div></div>`;
 
   html += `<div class="hud" style="margin-top:12px;">
-    <div><span style="color:${teamColor(human.team)}; font-weight:700;">You</span> ${G.dealerIndex === 0 ? '(Dealer)' : ''} ${human.team === 'solo' ? '⭐ Solo' : '· ' + teamLabel(human.team)}</div>
+    <div><span style="color:${teamColor(human.team)}; font-weight:700;">You</span> ${G.dealerIndex === 0 ? '(Dealer)' : ''} ${human.team === 'solo' ? '⭐ <span style="color:' + teamColor(human.team) + '; font-weight:700;">Solo</span>' : '· <span style="color:' + teamColor(human.team) + '; font-weight:700;">' + teamLabel(human.team) + '</span>'}</div>
     <div>Bid: ${human.bid === null ? '-' : human.bid} · Won: ${human.tricksWon} · VP: ${Math.round(human.vp)}</div>
   </div>`;
 
