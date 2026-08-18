@@ -1,0 +1,1417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ben Wizard</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f0eee8;
+  --surface: #faf9f5;
+  --surface2: #f0ede4;
+  --surface3: #e8e3d8;
+  --gold: #7a5a10;
+  --gold-light: #a07820;
+  --gold-dim: #b89840;
+  --cream: #1a1408;
+  --cream-dim: #4a4030;
+  --red: #b02010;
+  --red-light: #c83020;
+  --green: #1a6a38;
+  --green-light: #2a8a50;
+  --text: #1a1408;
+  --text-dim: #6a6050;
+  --border: #d0c8b0;
+  --border-gold: #c0a850;
+
+  --hearts: #cc1a1a;
+  --swords: #8a6800;
+  --diamonds: #1a5aaa;
+  --clovers: #1a7a3a;
+  --moon: #5040a0;
+  --sun: #a05008;
+
+  --card-w: 62px;
+  --card-h: 92px;
+  --radius: 6px;
+}
+@media (max-width: 480px) {
+  :root { --card-w: 50px; --card-h: 74px; }
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Crimson Pro', serif;
+  font-size: 16px;
+  min-height: 100vh;
+  padding: 16px;
+}
+h1, h2, h3, .display {
+  font-family: 'Cinzel Decorative', serif;
+}
+.screen { max-width: 900px; margin: 0 auto; }
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+h1.title {
+  text-align: center;
+  font-size: 28px;
+  color: var(--gold);
+  margin-bottom: 4px;
+  letter-spacing: 1px;
+}
+.subtitle { text-align: center; color: var(--text-dim); margin-bottom: 20px; font-style: italic; }
+label { display: block; font-weight: 600; margin: 14px 0 6px; color: var(--cream-dim); }
+select, input[type=number] {
+  width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--border);
+  font-family: inherit; font-size: 16px; background: var(--surface2);
+}
+.toggle-row { display: flex; align-items: center; gap: 10px; margin: 14px 0; }
+.toggle-row input { width: 20px; height: 20px; }
+button {
+  font-family: 'Crimson Pro', serif;
+  font-weight: 600;
+  font-size: 16px;
+  padding: 12px 20px;
+  border-radius: 8px;
+  border: 1px solid var(--border-gold);
+  background: var(--gold);
+  color: var(--surface);
+  cursor: pointer;
+}
+button:hover { background: var(--gold-light); }
+button:disabled { opacity: 0.4; cursor: default; }
+button.secondary { background: var(--surface2); color: var(--text); border-color: var(--border); }
+.btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+
+/* Table / play area */
+.table {
+  position: relative;
+  background: radial-gradient(ellipse at center, #2a5a3a 0%, #1a3a26 100%);
+  border-radius: 16px;
+  border: 4px solid var(--gold-dim);
+  padding: 20px;
+  min-height: 380px;
+}
+.opponents-row {
+  display: flex; justify-content: space-around; flex-wrap: wrap; gap: 8px; margin-bottom: 20px;
+}
+.opp-badge {
+  background: rgba(250,249,245,0.92); border-radius: 8px; padding: 6px 10px; text-align: center; min-width: 84px;
+  border: 2px solid transparent;
+}
+.opp-badge.active { border-color: var(--gold); }
+.opp-badge.dealer::before { content: "D "; color: var(--red); font-weight: 700; }
+.opp-name { font-weight: 700; font-size: 13px; }
+.opp-info { font-size: 11px; color: var(--text-dim); }
+.trick-area {
+  display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap; min-height: 110px;
+  margin-bottom: 16px;
+}
+.played-card-slot { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.played-card-slot .who { font-size: 11px; color: #e8e0c8; }
+.played-card-slot.winning .card {
+  box-shadow: 0 0 0 3px #f0d060, 0 0 14px 2px rgba(240,208,96,0.7);
+  transform: translateY(-4px);
+}
+.winning-badge {
+  background: #f0d060; color: #1a1408; font-weight: 700; font-size: 9px;
+  padding: 1px 5px; border-radius: 4px; margin-left: 3px; letter-spacing: 0.5px;
+}
+.lead-suit-badge { font-size: 10px; }
+
+.card {
+  width: var(--card-w); height: var(--card-h);
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  font-weight: 700; cursor: pointer; user-select: none;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.25);
+  transition: transform 0.1s;
+}
+.card:hover { transform: translateY(-6px); }
+.card.disabled { opacity: 0.35; cursor: default; }
+.card.disabled:hover { transform: none; }
+.card .rank { font-size: 14px; line-height: 1; }
+.card .icon { font-size: 17px; line-height: 1; margin: 2px 0; }
+.card .vp-symbol { font-size: 11px; line-height: 1; }
+.vp-symbol .vp-star { color: #a07800; }
+.vp-symbol .vp-arrow { color: #1a5aaa; }
+.vp-symbol .vp-skull { color: #7a1010; }
+.vp-symbol .vp-arrow-neg { color: #c81c1c; }
+.card.wizard { background: linear-gradient(160deg, #3a2a5a, #1a1030); color: #f0d890; }
+.card.jester { background: linear-gradient(160deg, #5a1a1a, #300a0a); color: #d8b8a0; }
+.card.trump-suit { box-shadow: 0 0 0 2px var(--gold-light), 0 2px 4px rgba(0,0,0,0.25); }
+
+.hand-row {
+  display: flex; justify-content: center; gap: -8px; flex-wrap: wrap; margin-top: 10px;
+}
+.hand-row .card { margin: 0 -6px; }
+
+.hud {
+  display: flex; justify-content: space-between; align-items: center;
+  background: rgba(250,249,245,0.92); border-radius: 8px; padding: 8px 14px; margin-bottom: 12px; font-size: 14px;
+}
+.vp-tags span { margin-right: 8px; }
+.vp-star { color: #a07800; }
+.vp-arrow { color: #1a5aaa; }
+.vp-skull { color: #7a1010; }
+
+.bid-modal, .msg-modal {
+  position: fixed; inset: 0; background: rgba(20,15,5,0.6);
+  display: flex; align-items: center; justify-content: center; z-index: 50;
+}
+.bid-box, .msg-box {
+  background: var(--surface); border-radius: 10px; padding: 24px; max-width: 380px; width: 90%;
+  border: 2px solid var(--gold-dim); text-align: center;
+  max-height: 85vh; overflow-y: auto;
+}
+.bid-choices { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 16px; }
+.bid-choices button { min-width: 44px; padding: 10px; }
+.hidden { display: none !important; }
+
+.scoreboard { width: 100%; border-collapse: collapse; margin-top: 10px; }
+.scoreboard th, .scoreboard td { padding: 6px 8px; text-align: center; border-bottom: 1px solid var(--border); font-size: 14px; }
+.scoreboard th { color: var(--text-dim); font-weight: 600; }
+.solo-tag { color: var(--gold); font-weight: 700; }
+.team-tag { color: var(--diamonds); font-weight: 700; }
+.made-bid { color: var(--green); font-weight: 700; }
+.missed-bid { color: var(--red); font-weight: 700; }
+
+.log { font-size: 13px; color: var(--text-dim); max-height: 90px; overflow-y: auto; margin-top: 10px; text-align: left; }
+</style>
+</head>
+<body>
+
+<div id="app" class="screen"></div>
+
+<script>
+// ============================================================
+// BenWizard — v0.1 core engine
+// TD = Wizard (always wins, first Wizard played wins trick)
+// TC = Jester (always loses; if all cards in trick are Jesters, first Jester wins)
+// ============================================================
+
+// ---------- Card data (VP structure ported from BenMü) ----------
+const SUIT_DEFS = [
+  { name:'Hearts',   icon:'♥', color:'var(--hearts)' },
+  { name:'Swords',   icon:'⚔', color:'var(--swords)' },
+  { name:'Diamonds', icon:'♦', color:'var(--diamonds)' },
+  { name:'Clovers',  icon:'♣', color:'var(--clovers)' },
+  { name:'Moon',     icon:'☾', color:'var(--moon)' },
+  { name:'Sun',      icon:'☀', color:'var(--sun)' },
+];
+
+const RANKS = [
+  { rank:1,  name:'Ace',    face:'A',  count:1, cat:'Star',    iVP:10, eVP:0,  pen:0  },
+  { rank:2,  name:'2',      face:'2',  count:1, cat:'Star',    iVP:5,  eVP:5,  pen:0,  dualVP:true },
+  { rank:3,  name:'3',      face:'3',  count:1, cat:'Arrow',   iVP:0,  eVP:5,  pen:0  },
+  { rank:4,  name:'4',      face:'4',  count:1, cat:'Neutral', iVP:0,  eVP:0,  pen:0  },
+  { rank:5,  name:'5',      face:'5',  count:3, cat:'Arrow',   iVP:0,  eVP:10, pen:0 },
+  { rank:6,  name:'6',      face:'6',  count:1, cat:'Neutral', iVP:0,  eVP:0,  pen:0  },
+  { rank:7,  name:'7',      face:'7',  count:1, cat:'Skull',   iVP:0,  eVP:-5, pen:-5 },
+  { rank:8,  name:'8',      face:'8',  count:3, cat:'Arrow',   iVP:0,  eVP:5,  pen:0  },
+  { rank:9,  name:'9',      face:'9',  count:1, cat:'StarSkull', iVP:0,  eVP:5,  skullVP:-5, pen:0, dualVP:true },
+  { rank:10, name:'10',     face:'10', count:1, cat:'Neutral', iVP:0,  eVP:0,  pen:0  },
+  { rank:11, name:'Page',   face:'Pg', count:2, cat:'Star',    iVP:5,  eVP:0,  pen:0  },
+  { rank:12, name:'Knight', face:'Kn', count:1, cat:'Skull',   iVP:0,  eVP:-10, pen:-5 },
+  { rank:13, name:'Queen',  face:'Q',  count:1, cat:'Neutral', iVP:0,  eVP:0,  pen:0  },
+  { rank:14, name:'King',   face:'K',  count:1, cat:'Arrow',   iVP:0,  eVP:-10, pen:0  },
+];
+
+// Deck/round scaling per player count (agreed table)
+const PLAYER_CONFIG = {
+  3:  { suits:3, TD:3, TC:3, start:10, max:21 },
+  4:  { suits:4, TD:4, TC:4, start:10, max:21 },
+  5:  { suits:5, TD:5, TC:5, start:10, max:21 },
+  6:  { suits:6, TD:6, TC:6, start:10, max:21 },
+  7:  { suits:6, TD:6, TC:6, start:5,  max:18 },
+  8:  { suits:6, TD:6, TC:6, start:5,  max:15 },
+  9:  { suits:6, TD:6, TC:6, start:5,  max:14 },
+  10: { suits:6, TD:6, TC:6, start:5,  max:12 },
+};
+
+// Solo count by player count (BenRummy precedent)
+
+// ---------- Deck builder ----------
+function buildDeck(numPlayers) {
+  const cfg = PLAYER_CONFIG[numPlayers];
+  const suits = SUIT_DEFS.slice(0, cfg.suits);
+  const deck = [];
+  let uid = 0;
+  suits.forEach((suit, si) => {
+    RANKS.forEach(r => {
+      for (let c = 0; c < r.count; c++) {
+        deck.push({
+          id: 'c' + (uid++), type:'suit', suit: suit.name, suitIcon: suit.icon, suitColor: suit.color,
+          rank: r.rank, face: r.face, cat: r.cat, iVP: r.iVP, eVP: r.eVP, skullVP: r.skullVP || 0, pen: r.pen, dualVP: !!r.dualVP,
+        });
+      }
+    });
+  });
+  for (let i = 0; i < cfg.TD; i++) {
+    deck.push({ id:'wiz'+i, type:'wizard', face:'Wizard', cat:'Arrow', iVP:0, eVP:5, pen:0 });
+  }
+  for (let i = 0; i < cfg.TC; i++) {
+    deck.push({ id:'jes'+i, type:'jester', face:'Jester', cat:'StarSkull', iVP:0, eVP:5, skullVP:-5, pen:0, dualVP:true });
+  }
+  return shuffle(deck);
+}
+
+// ---------- Major Arcana (curated v1 subset — DuringTrick only, no PreDeal cards yet) ----------
+// suitRef: if set, this card is only included in the deck when that suit is active
+// for the current player count (per SUIT_DEFS.slice(0, cfg.suits)).
+const MA_CARDS = [
+  { maId:'Tower',   label:'The Tower',        copies:3, timing:'DuringTrick',
+    desc:'Knight/Queen/King lose 7 ranks for the rest of this trick.' },
+  { maId:'Star',    label:'The Star',         copies:3, timing:'DuringTrick',
+    desc:'Star VP is doubled for cards captured in this trick.' },
+  { maId:'World',   label:'The World',        copies:3, timing:'DuringTrick',
+    desc:'Trick winner gets +6▲ per distinct suit present in this trick.' },
+  { maId:'Magician',label:'The Magician',     copies:2, timing:'DuringTrick', suitRef:'Clovers',
+    desc:'Trick winner gets +10▲ if a Clovers card appears in this trick.' },
+  { maId:'Priestess',label:'High Priestess',  copies:2, timing:'DuringTrick', suitRef:'Hearts',
+    desc:'Trick winner gets +10▲ if a Hearts card appears in this trick.' },
+  { maId:'Empress', label:'The Empress',      copies:2, timing:'DuringTrick', suitRef:'Diamonds',
+    desc:'Trick winner gets +10▲ if a Diamonds card appears in this trick.' },
+  { maId:'Emperor', label:'The Emperor',      copies:2, timing:'DuringTrick', suitRef:'Swords',
+    desc:'Trick winner gets +10▲ if a Swords card appears in this trick.' },
+  { maId:'Moon',    label:'The Moon',         copies:2, timing:'DuringTrick', suitRef:'Moon',
+    desc:'Trick winner gets +10▲ if a Moon card appears in this trick.' },
+  { maId:'Sun',     label:'The Sun',          copies:2, timing:'DuringTrick', suitRef:'Sun',
+    desc:'Trick winner gets +10▲ if a Sun card appears in this trick.' },
+  { maId:'Sage',    label:'The Sage',         copies:3, timing:'DuringTrick',
+    desc:'Pick a rank (8, 9, or 10). Trick winner gets +4▲ per card of that rank in this trick.' },
+  { maId:'Hanged',  label:'The Hanged Man',   copies:2, timing:'DuringTrick',
+    desc:'You skip this trick (auto-pass) and lead the next one.' },
+  { maId:'Fortune', label:'Wheel of Fortune', copies:2, timing:'DuringTrick',
+    desc:'Rotates every player\'s Arcana Tableau one seat clockwise.' },
+];
+
+function buildMADeck(numPlayers) {
+  const cfg = PLAYER_CONFIG[numPlayers];
+  const activeSuits = new Set(SUIT_DEFS.slice(0, cfg.suits).map(s => s.name));
+  const deck = [];
+  let uid = 0;
+  MA_CARDS.forEach(def => {
+    if (def.suitRef && !activeSuits.has(def.suitRef)) return; // excluded — suit not in play
+    for (let i = 0; i < def.copies; i++) {
+      deck.push({ id: 'ma' + (uid++), maId: def.maId, label: def.label, desc: def.desc, timing: def.timing, suitRef: def.suitRef || null });
+    }
+  });
+  return shuffle(deck);
+}
+
+function topUpMAAuction() {
+  const targetSize = G.numPlayers * 2;
+  while (G.maAuctionTable.length < targetSize && G.maDeck.length) {
+    G.maAuctionTable.push(G.maDeck.shift());
+  }
+  if (G.maAuctionTable.length < targetSize && G.maDiscard.length) {
+    G.maDeck = shuffle(G.maDiscard);
+    G.maDiscard = [];
+    while (G.maAuctionTable.length < targetSize && G.maDeck.length) {
+      G.maAuctionTable.push(G.maDeck.shift());
+    }
+  }
+}
+
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// Hand sort: Wizards first, then trump suit, then remaining suits in descending
+// order (Sun, Moon, Clovers, Diamonds, Swords, Hearts), ranks high-to-low within
+// each suit, Jesters last.
+const SUIT_DESC_ORDER = SUIT_DEFS.slice().reverse().map(s => s.name);
+function cardSortKey(c) {
+  if (c.type === 'wizard') return [-2, 0];
+  if (c.type === 'jester') return [999, 0];
+  const isTrump = G && G.trumpSuit && c.suit === G.trumpSuit;
+  const groupIdx = isTrump ? -1 : SUIT_DESC_ORDER.indexOf(c.suit);
+  return [groupIdx, -c.rank];
+}
+function sortedHandFor(hand) {
+  return hand.slice().sort((a, b) => {
+    const ka = cardSortKey(a), kb = cardSortKey(b);
+    return ka[0] - kb[0] || ka[1] - kb[1];
+  });
+}
+
+// ---------- Game state ----------
+let G = null;
+
+function newGame(numPlayers, useMajors, difficulty) {
+  const cfg = PLAYER_CONFIG[numPlayers];
+  const players = [];
+  players.push({ id:0, name:'You', isHuman:true, vp:0, star:0, arrow:0, skull:0, arcana:[] });
+  for (let i = 1; i < numPlayers; i++) {
+    players.push({ id:i, name:'AI ' + i, isHuman:false, vp:0, star:0, arrow:0, skull:0, arcana:[] });
+  }
+  G = {
+    numPlayers, useMajors, cfg, players,
+    difficulty: difficulty || 'medium',
+    dealerIndex: 0,
+    roundNum: 0,
+    handSize: cfg.start - 1, // will be incremented to cfg.start on first newHand()
+    maxHandSize: cfg.max,
+    phase: 'setup',
+    log: [],
+    maDeck: useMajors ? buildMADeck(numPlayers) : [],
+    maDiscard: [],
+    maAuctionTable: [],
+  };
+  addLog('New game started: ' + numPlayers + ' players, AI difficulty: ' + G.difficulty + '.');
+  newHand();
+}
+
+function addLog(msg) { G.log.unshift(msg); if (G.log.length > 40) G.log.pop(); }
+
+function newHand() {
+  G.roundNum += 1;
+  G.handSize += 1;
+  if (G.handSize > G.maxHandSize) { G.phase = 'gameEnd'; render(); return; }
+
+  // Dealer rotation: round 1 = human/host (index 0). Subsequent = highest cumulative VP, random tie-break.
+  if (G.roundNum > 1) {
+    let maxVP = Math.max(...G.players.map(p => p.vp));
+    let candidates = G.players.filter(p => p.vp === maxVP);
+    G.dealerIndex = candidates[Math.floor(Math.random() * candidates.length)].id;
+  }
+
+  const deck = buildDeck(G.numPlayers);
+  G.players.forEach(p => { p.hand = []; p.bid = null; p.tricksWon = 0; p.handArrow = 0; p.handStar = 0; p.handSkull = 0; });
+
+  // --- Phase 1: joker distribution ---
+  // Hand 1: every player gets exactly one joker (random Wizard/Jester) — no VP history yet.
+  // Hand 2+: the winning player(s) (tied for max VP) get ZERO jokers. All jokers are
+  // distributed among the rest, in ascending-VP order, cycling through that list as many
+  // times as needed to place every joker (so the lowest-VP players can end up with more
+  // than one). Every player receives the SAME number of phase-1 cards — winners and any
+  // non-winner who received fewer jokers than the max get non-joker cards to fill the gap.
+  let jokerPool = deck.filter(c => c.type !== 'suit');
+  let restPool = deck.filter(c => c.type === 'suit');
+  const phase1 = {}; // playerId -> array of cards received this phase
+
+  if (G.roundNum === 1) {
+    shuffle(G.players).forEach(p => {
+      phase1[p.id] = jokerPool.length ? [jokerPool.shift()] : [restPool.shift()];
+    });
+  } else {
+    const maxVP = Math.max(...G.players.map(p => p.vp));
+    let eligible = G.players.filter(p => p.vp !== maxVP);
+    if (!eligible.length) eligible = G.players.slice(); // full tie — no one to exclude
+    const cycleOrder = shuffle(eligible).sort((a, b) => a.vp - b.vp);
+    G.players.forEach(p => { phase1[p.id] = []; });
+
+    let i = 0;
+    // Cap: no single player receives more than 4 jokers in one hand, even in extreme
+    // tie scenarios. Once every eligible player has hit the cap (or the hand-size safety
+    // cap), any leftover jokers fall back into the normal randomized deal.
+    const JOKER_CAP_PER_HAND = 4;
+    let sinceLastAssign = 0;
+    while (jokerPool.length && sinceLastAssign < cycleOrder.length) {
+      const p = cycleOrder[i % cycleOrder.length];
+      if (phase1[p.id].length < JOKER_CAP_PER_HAND && phase1[p.id].length < G.handSize) {
+        phase1[p.id].push(jokerPool.shift());
+        sinceLastAssign = 0;
+      } else {
+        sinceLastAssign++;
+      }
+      i++;
+    }
+    const phase1Size = Math.min(Math.max(...G.players.map(p => phase1[p.id].length), 0), G.handSize);
+    G.players.forEach(p => {
+      while (phase1[p.id].length < phase1Size && restPool.length) {
+        phase1[p.id].push(restPool.shift());
+      }
+    });
+
+    // Any jokers left over once every eligible player has hit the cap are removed from
+    // play entirely for this hand — they do NOT fall back into the normal deal, so a
+    // winner can never end up with one.
+    G.maDiscardedJokersThisHand = jokerPool.length;
+    jokerPool = [];
+  }
+  G.players.forEach(p => { p.hand.push(...phase1[p.id]); });
+
+  const dealtSoFar = Object.values(phase1).reduce((s, arr) => s + arr.length, 0) / G.numPlayers;
+  const remainingDeck = shuffle([...jokerPool, ...restPool]);
+
+  // Deal the rest of the hand normally, starting from player left of dealer
+  let idx = (G.dealerIndex + 1) % G.numPlayers;
+  for (let c = 0; c < G.handSize - dealtSoFar; c++) {
+    for (let i = 0; i < G.numPlayers; i++) {
+      const p = G.players[(idx + i) % G.numPlayers];
+      if (remainingDeck.length) p.hand.push(remainingDeck.shift());
+    }
+  }
+
+  // Trump: flip next card if any remain
+  G.trumpSuit = null;
+  G.trumpCard = null;
+  if (remainingDeck.length) {
+    const up = remainingDeck.shift();
+    G.trumpCard = up;
+    if (up.type === 'wizard') {
+      // Dealer chooses trump suit (AI dealer picks its most common suit; human dealer prompted)
+      G.pendingTrumpChoice = true;
+    } else if (up.type === 'jester') {
+      G.trumpSuit = null; // no trump this hand
+    } else {
+      G.trumpSuit = up.suit;
+    }
+  }
+
+  // Team formation now happens after Bidding + (optional) MA Draft — see afterBidding().
+
+  // Bid order: starts left of dealer, dealer bids last
+  G.bidOrder = [];
+  for (let i = 1; i <= G.numPlayers; i++) G.bidOrder.push((G.dealerIndex + i) % G.numPlayers);
+  G.bidTurnPtr = 0;
+  G.bidsSoFar = [];
+
+  G.leadPlayer = (G.dealerIndex + 1) % G.numPlayers;
+  G.currentTrick = [];
+  G.ledSuit = null;
+  G.wizardLedThisTrick = false;
+  G.trickNum = 0;
+  G.maEffects = {}; // per-trick active Major Arcana effects, keyed by trickNum
+  G.players.forEach(p => { p.maActivatedThisTrick = false; });
+
+  G.phase = G.pendingTrumpChoice ? 'trumpChoice' : 'bidding';
+  addLog('--- Round ' + G.roundNum + ' (' + G.handSize + ' cards) — dealer: ' + G.players[G.dealerIndex].name + ' ---');
+}
+
+// Divides `list` into `numTeams` groups via snake draft (1,2,3,3,2,1,1,2,3...)
+// ordered by VP descending (random tie-break), so teams stay balanced by standing.
+function snakeDraftTeams(list, numTeams) {
+  const sorted = shuffle(list).sort((a, b) => b.vp - a.vp);
+  const teams = Array.from({ length: numTeams }, () => []);
+  let t = 0, dir = 1;
+  sorted.forEach(p => {
+    teams[t].push(p);
+    if (dir === 1) { if (t === numTeams - 1) dir = -1; else t++; }
+    else { if (t === 0) dir = 1; else t--; }
+  });
+  return teams;
+}
+
+
+function assignTeams() {
+  if (G.roundNum === 1) {
+    // Hand 1: no VP history yet — split into 2 balanced teams. 3P collapses to a
+    // single team of 3, since a 2-team split there would leave a team of size 1
+    // (minimum team size is 2).
+    if (G.numPlayers === 3) {
+      G.players.forEach(p => { p.team = 'A'; });
+      return;
+    }
+    const teams = snakeDraftTeams(G.players, 2);
+    teams[0].forEach(p => { p.team = 'A'; });
+    teams[1].forEach(p => { p.team = 'B'; });
+    return;
+  }
+
+  // Hand 2+: solo = every player currently tied for the VP lead (however many that is).
+  // Everyone else splits into teams of minimum size 2 via snake draft. If that would
+  // leave exactly one leftover player (no valid partner), the whole hand collapses to
+  // all-solo instead.
+  const maxVP = Math.max(...G.players.map(p => p.vp));
+  const solos = G.players.filter(p => p.vp === maxVP);
+  const remaining = G.players.filter(p => p.vp !== maxVP);
+
+  if (remaining.length === 1) {
+    G.players.forEach(p => { p.team = 'solo'; });
+    return;
+  }
+  solos.forEach(p => { p.team = 'solo'; });
+  if (remaining.length === 0) return; // everyone tied — already all solo
+
+  const numTeams = Math.max(1, Math.floor(remaining.length / 2));
+  const pairTeams = snakeDraftTeams(remaining, numTeams);
+  pairTeams.forEach((teamArr, idx) => {
+    teamArr.forEach(p => { p.team = 'pair' + (idx + 1); });
+  });
+}
+
+function chooseTrump(suitName) {
+  G.trumpSuit = suitName;
+  G.pendingTrumpChoice = false;
+  G.phase = 'bidding';
+  addLog(G.players[G.dealerIndex].name + ' chose ' + suitName + ' as trump.');
+  render();
+  maybeAdvanceBidding();
+}
+
+// ---------- Bidding ----------
+function tricksAvailable() { return G.handSize; }
+
+function isRestrictedBid(playerIdx, bidVal) {
+  // Only the dealer (last bidder) is restricted
+  if (playerIdx !== G.dealerIndex) return false;
+  const sumOthers = G.bidsSoFar.reduce((s, b) => s + b.bid, 0);
+  return (sumOthers + bidVal) === tricksAvailable();
+}
+
+function submitBid(playerIdx, bidVal) {
+  G.players[playerIdx].bid = bidVal;
+  G.bidsSoFar.push({ player: playerIdx, bid: bidVal });
+  addLog(G.players[playerIdx].name + ' bids ' + bidVal + '.');
+  G.bidTurnPtr++;
+}
+
+function maybeAdvanceBidding() {
+  if (G.bidTurnPtr >= G.bidOrder.length) {
+    afterBidding();
+    return;
+  }
+  const nextPlayer = G.bidOrder[G.bidTurnPtr];
+  if (!G.players[nextPlayer].isHuman) {
+    setTimeout(() => {
+      const bid = aiChooseBid(nextPlayer);
+      submitBid(nextPlayer, bid);
+      render();
+      maybeAdvanceBidding();
+    }, 500);
+  } else {
+    render(); // show bid modal for human
+  }
+}
+
+// Bidding is complete. Next: MA Draft (if enabled), then Team Assignment, then Trick Play.
+function afterBidding() {
+  if (G.useMajors) {
+    startMADraft();
+  } else {
+    assignTeams();
+    G.phase = 'playing';
+    render();
+    maybeAITurn();
+  }
+}
+
+function startMADraft() {
+  G.phase = 'maDraft';
+  topUpMAAuction();
+  // Pick order: ascending VP (catch-up), random tie-break
+  G.maDraftOrder = shuffle(G.players).sort((a, b) => a.vp - b.vp).map(p => p.id);
+  G.maDraftIdx = 0;
+  addLog('✦ Arcana Draft — ' + G.maAuctionTable.length + ' cards available.');
+  render();
+  advanceMADraft();
+}
+
+function advanceMADraft() {
+  if (G.maDraftIdx >= G.maDraftOrder.length || G.maAuctionTable.length === 0) {
+    topUpMAAuction(); // leave table topped up for next hand
+    addLog('✦ Arcana draft complete.');
+    assignTeams();
+    G.phase = 'playing';
+    render();
+    maybeAITurn();
+    return;
+  }
+  const seat = G.maDraftOrder[G.maDraftIdx];
+  if (!G.players[seat].isHuman) {
+    setTimeout(() => {
+      const pick = G.maAuctionTable[Math.floor(Math.random() * G.maAuctionTable.length)];
+      maDraftPick(seat, pick.id);
+    }, 500);
+  } else {
+    render(); // show inline draft bar for human
+  }
+}
+
+function maDraftPick(seat, cardId) {
+  const ci = G.maAuctionTable.findIndex(c => c.id === cardId);
+  if (ci === -1) return;
+  const card = G.maAuctionTable.splice(ci, 1)[0];
+  const player = G.players[seat];
+  player.arcana.push(card);
+  addLog(player.name + ' drafts ' + card.label + '.');
+  G.maDraftIdx++;
+  render();
+  advanceMADraft();
+}
+
+function aiChooseBid(playerIdx) {
+  if (G.difficulty === 'hard') return aiChooseBidHard(playerIdx);
+
+  const p = G.players[playerIdx];
+  // Easy/Medium heuristic: count strong cards (Wizards, high trump, high off-suit)
+  let est = 0;
+  p.hand.forEach(c => {
+    if (c.type === 'wizard') est += 1;
+    else if (c.type === 'jester') est += 0;
+    else if (G.trumpSuit && c.suit === G.trumpSuit && c.rank >= 10) est += 0.7;
+    else if (c.rank >= 12) est += 0.5;
+    else if (c.rank >= 9) est += 0.2;
+  });
+  let bid = Math.round(est);
+  bid = Math.max(0, Math.min(G.handSize, bid));
+  if (isRestrictedBid(playerIdx, bid)) {
+    bid = bid + 1 <= G.handSize ? bid + 1 : Math.max(0, bid - 1);
+  }
+  return bid;
+}
+
+// Hard difficulty: "cheats" — sees every other player's actual hand. For each of its
+// own cards, checks whether ANY card anywhere else on the table (across all opponents,
+// combined) would beat it — a true global topper, not a rank-threshold guess.
+function aiChooseBidHard(playerIdx) {
+  const p = G.players[playerIdx];
+  const allOtherCards = G.players.filter(pl => pl.id !== playerIdx).flatMap(pl => pl.hand);
+  let est = 0;
+
+  p.hand.forEach(c => {
+    if (c.type === 'wizard') { est += 1; return; }
+    if (c.type === 'jester') return;
+    const isTrump = G.trumpSuit && c.suit === G.trumpSuit;
+    const beaten = allOtherCards.some(oc => {
+      if (oc.type === 'wizard') return true;
+      if (oc.type === 'jester') return false;
+      const ocTrump = G.trumpSuit && oc.suit === G.trumpSuit;
+      if (ocTrump && !isTrump) return true;
+      if (ocTrump && isTrump) return oc.rank > c.rank;
+      if (!ocTrump && !isTrump && oc.suit === c.suit) return oc.rank > c.rank;
+      return false;
+    });
+    if (!beaten) est += 1;
+  });
+
+  let bid = Math.round(est);
+  bid = Math.max(0, Math.min(G.handSize, bid));
+  if (isRestrictedBid(playerIdx, bid)) {
+    bid = bid + 1 <= G.handSize ? bid + 1 : Math.max(0, bid - 1);
+  }
+  return bid;
+}
+
+// ---------- Trick play ----------
+function legalPlays(playerIdx) {
+  const p = G.players[playerIdx];
+  if (!G.ledSuit) return p.hand; // free lead, or led by wizard/jester
+  const followers = p.hand.filter(c => c.type === 'suit' && c.suit === G.ledSuit);
+  if (followers.length === 0) return p.hand; // no suit cards, anything goes
+  // Must follow suit, but wizards/jesters are always exempt
+  return p.hand.filter(c => (c.type === 'suit' && c.suit === G.ledSuit) || c.type === 'wizard' || c.type === 'jester');
+}
+
+function playCard(playerIdx, cardId) {
+  const p = G.players[playerIdx];
+  const ci = p.hand.findIndex(c => c.id === cardId);
+  if (ci === -1) return;
+  const card = p.hand.splice(ci, 1)[0];
+  G.currentTrick.push({ player: playerIdx, card });
+
+  // Jester: +5 Star VP goes to whoever PLAYS it, immediately — independent of
+  // who ends up capturing (winning) the trick.
+  if (card.type === 'jester') {
+    p.handStar += card.eVP;
+  }
+
+  if (G.currentTrick.length === 1) {
+    if (card.type === 'wizard') {
+      G.ledSuit = null; // wizard led — no suit restriction
+      G.wizardLedThisTrick = true;
+    } else if (card.type === 'jester') {
+      G.ledSuit = null; // jester led — suit set by next non-jester card
+    } else {
+      G.ledSuit = card.suit;
+    }
+  } else if (G.ledSuit === null && !G.wizardLedThisTrick && card.type === 'suit') {
+    // first non-jester card sets the lead suit if jester led first
+    G.ledSuit = card.suit;
+  }
+
+  addLog(p.name + ' plays ' + cardLabel(card) + '.');
+
+  if (G.currentTrick.length === G.numPlayers) {
+    setTimeout(resolveTrick, 700);
+  } else {
+    render();
+    maybeAITurn();
+  }
+}
+
+function cardLabel(c) {
+  if (c.type === 'wizard') return 'Wizard';
+  if (c.type === 'jester') return 'Jester';
+  if (c.type === 'skip') return '(skips this trick)';
+  return c.face + ' of ' + c.suit;
+}
+
+// ---------- Major Arcana activation ----------
+function activateMA(seat, cardId) {
+  const player = G.players[seat];
+  const ci = player.arcana.findIndex(c => c.id === cardId);
+  if (ci === -1) return;
+  const card = player.arcana[ci];
+
+  if (card.maId === 'Sage') {
+    if (player.isHuman) {
+      G.pendingSage = { seat, cardId };
+      render();
+    } else {
+      const ranks = [8, 9, 10];
+      finishSageActivation(seat, cardId, ranks[Math.floor(Math.random() * ranks.length)]);
+    }
+    return;
+  }
+
+  player.arcana.splice(ci, 1);
+  G.maDiscard.push(card);
+  player.maActivatedThisTrick = true;
+  const fx = G.maEffects[G.trickNum] || {};
+
+  switch (card.maId) {
+    case 'Tower':
+      fx.tower = true;
+      addLog(player.name + ' activates The Tower — Kn/Q/K lose 7 ranks this trick.');
+      break;
+    case 'Star':
+      fx.doubleStars = true;
+      addLog(player.name + ' activates The Star — Star VP doubled this trick.');
+      break;
+    case 'World':
+      fx.worldActive = true;
+      addLog(player.name + ' activates The World — +6▲ per distinct suit in trick.');
+      break;
+    case 'Magician': case 'Priestess': case 'Empress': case 'Emperor': case 'Moon': case 'Sun':
+      fx.suitBonus = { suit: card.suitRef, vp: 10 };
+      addLog(player.name + ' activates ' + card.label + ' — +10▲ if ' + card.suitRef + ' appears in trick.');
+      break;
+    case 'Hanged':
+      fx.hangedSeat = seat;
+      addLog(player.name + ' activates The Hanged Man — skips this trick, leads next.');
+      break;
+    case 'Fortune': {
+      const allArcana = G.players.map(p => p.arcana.slice());
+      G.players.forEach((p, i) => { p.arcana = allArcana[(i - 1 + G.numPlayers) % G.numPlayers]; });
+      addLog(player.name + ' activates Wheel of Fortune — Arcana Tableaux rotate clockwise.');
+      break;
+    }
+  }
+  G.maEffects[G.trickNum] = fx;
+
+  if (card.maId === 'Hanged') {
+    render();
+    playSkipForHanged(seat);
+    return;
+  }
+  render();
+}
+
+function finishSageActivation(seat, cardId, rank) {
+  const player = G.players[seat];
+  const ci = player.arcana.findIndex(c => c.id === cardId);
+  if (ci === -1) return;
+  const card = player.arcana.splice(ci, 1)[0];
+  G.maDiscard.push(card);
+  player.maActivatedThisTrick = true;
+  const fx = G.maEffects[G.trickNum] || {};
+  fx.rankBonus = { rank, vp: 4 };
+  G.maEffects[G.trickNum] = fx;
+  addLog(player.name + ' activates The Sage — rank ' + rank + ' cards score +4▲ this trick.');
+  G.pendingSage = null;
+  render();
+}
+
+function playSkipForHanged(seat) {
+  const skipCard = { id: 'skip' + seat + '_' + G.trickNum, type: 'skip', cat: 'Neutral', iVP: 0, eVP: 0 };
+  G.currentTrick.push({ player: seat, card: skipCard });
+  addLog(G.players[seat].name + ' skips this trick (Hanged Man).');
+  if (G.currentTrick.length === G.numPlayers) {
+    setTimeout(resolveTrick, 700);
+  } else {
+    render();
+    maybeAITurn();
+  }
+}
+
+function computeTrickWinner(plays) {
+  if (!plays.length) return null;
+  const firstWizard = plays.find(pl => pl.card.type === 'wizard');
+  if (firstWizard) return firstWizard.player;
+  const contenders = plays.filter(pl => pl.card.type !== 'jester' && pl.card.type !== 'skip');
+  if (contenders.length === 0) {
+    const firstJester = plays.find(pl => pl.card.type === 'jester');
+    return firstJester ? firstJester.player : plays[0].player;
+  }
+  let best = contenders[0];
+  for (const pl of contenders.slice(1)) {
+    if (isHigher(pl.card, best.card)) best = pl;
+  }
+  return best.player;
+}
+
+function resolveTrick() {
+  const plays = G.currentTrick;
+  const winner = computeTrickWinner(plays);
+  const fx = G.maEffects[G.trickNum] || {};
+
+  const winP = G.players[winner];
+  winP.tricksWon++;
+
+  // Collect VP from all cards in the trick (Star VP doubled this trick if The Star was activated)
+  let starDelta = 0, arrowDelta = 0, skullDelta = 0;
+  plays.forEach(pl => {
+    const c = pl.card;
+    if (c.type === 'skip') return;
+    if (c.type === 'wizard') {
+      arrowDelta += c.eVP;
+    } else if (c.type === 'jester') {
+      // Star VP already credited to the player at play-time (see playCard); only
+      // the Skull penalty applies here, to whoever captures (wins the trick with) it.
+      skullDelta += c.skullVP;
+    } else if (c.cat === 'Star') {
+      starDelta += c.dualVP ? c.eVP : c.iVP;
+    } else if (c.cat === 'StarSkull') {
+      // Rank 9: both components apply together, at capture time.
+      starDelta += c.eVP;
+      skullDelta += c.skullVP;
+    } else if (c.cat === 'Arrow') {
+      arrowDelta += c.eVP;
+    } else if (c.cat === 'Skull') {
+      skullDelta += c.eVP;
+    }
+  });
+  if (fx.doubleStars) starDelta *= 2;
+  winP.handStar += starDelta;
+  winP.handArrow += arrowDelta;
+  winP.handSkull += skullDelta;
+
+  // Major Arcana bonuses — applied immediately, ungated by bid/team rules (per BenMü precedent)
+  if (fx.worldActive) {
+    const suits = new Set(plays.filter(pl => pl.card.type === 'suit').map(pl => pl.card.suit));
+    const bonus = suits.size * 6;
+    if (bonus > 0) { winP.vp += bonus; addLog(winP.name + ' gets +' + bonus + '▲ from The World.'); }
+  }
+  if (fx.suitBonus) {
+    const present = plays.some(pl => pl.card.type === 'suit' && pl.card.suit === fx.suitBonus.suit);
+    if (present) { winP.vp += fx.suitBonus.vp; addLog(winP.name + ' gets +' + fx.suitBonus.vp + '▲ from The Magician.'); }
+  }
+  if (fx.rankBonus) {
+    const count = plays.filter(pl => pl.card.type === 'suit' && pl.card.rank === fx.rankBonus.rank).length;
+    if (count > 0) {
+      const bonus = count * fx.rankBonus.vp;
+      winP.vp += bonus;
+      addLog(winP.name + ' gets +' + bonus + '▲ from The Sage.');
+    }
+  }
+
+  addLog(winP.name + ' wins the trick.');
+  render(); // keep the completed trick visible (with winning highlight) briefly before clearing
+
+  setTimeout(() => {
+    G.currentTrick = [];
+    G.ledSuit = null;
+    G.wizardLedThisTrick = false;
+    G.trickNum++;
+    // The Hanged Man overrides normal lead succession — its activator leads next.
+    G.leadPlayer = (fx.hangedSeat !== undefined) ? fx.hangedSeat : winner;
+    G.players.forEach(p => { p.maActivatedThisTrick = false; });
+
+    if (G.players[0].hand.length === 0 && G.players.every(p => p.hand.length === 0)) {
+      scoreHand();
+    } else {
+      render();
+      maybeAITurn();
+    }
+  }, 3000);
+}
+
+function isHigher(cardA, refCard) {
+  const fx = G.maEffects[G.trickNum] || {};
+  const rankOf = c => (fx.tower && c.type === 'suit' && [12, 13, 14].includes(c.rank)) ? c.rank - 7 : c.rank;
+  const rankA = rankOf(cardA), rankR = rankOf(refCard);
+  // both non-jester suit or wizard cards (wizard case already handled above, so these are suit cards)
+  const aTrump = G.trumpSuit && cardA.suit === G.trumpSuit;
+  const rTrump = G.trumpSuit && refCard.suit === G.trumpSuit;
+  if (aTrump && !rTrump) return true;
+  if (!aTrump && rTrump) return false;
+  if (aTrump && rTrump) return rankA > rankR;
+  // neither trump: only counts if following the led suit
+  if (cardA.suit === G.ledSuit && refCard.suit !== G.ledSuit) return true;
+  if (cardA.suit !== G.ledSuit && refCard.suit === G.ledSuit) return false;
+  if (cardA.suit === G.ledSuit && refCard.suit === G.ledSuit) return rankA > rankR;
+  return false;
+}
+
+function maybeAITurn() {
+  if (G.phase !== 'playing') return;
+  const turnIdx = (G.leadPlayer + G.currentTrick.length) % G.numPlayers;
+  if (G.players[turnIdx].isHuman) return;
+  const p = G.players[turnIdx];
+  setTimeout(() => {
+    if (G.useMajors && !p.maActivatedThisTrick && p.arcana.length && Math.random() < 0.25) {
+      const card = p.arcana[Math.floor(Math.random() * p.arcana.length)];
+      activateMA(turnIdx, card.id);
+      if (card.maId === 'Hanged') return; // The Hanged Man consumes the turn (auto-skip)
+    }
+    const options = legalPlays(turnIdx);
+    if (!options.length) return;
+    const choice = aiChooseCard(turnIdx, options);
+    playCard(turnIdx, choice.id);
+  }, 600);
+}
+
+function aiChooseCard(playerIdx, options) {
+  const p = G.players[playerIdx];
+  const needsMore = p.tricksWon < (p.bid || 0);
+  const sorted = options.slice().sort((a, b) => cardPower(a) - cardPower(b));
+
+  if (!needsMore) return sorted[0]; // ducking behavior unchanged across all difficulties
+
+  if (G.difficulty === 'easy') {
+    return sorted[sorted.length - 1]; // original heuristic: always the highest legal card
+  }
+
+  const highest = sorted[sorted.length - 1];
+  const wouldWin = (G.difficulty === 'hard')
+    ? isTrueTopperHard(highest, playerIdx)
+    : computeTrickWinner(G.currentTrick.concat([{ player: playerIdx, card: highest }])) === playerIdx;
+
+  if (wouldWin) return highest;
+  // Highest card wouldn't (provably) win — hold it back. Play a middle-ranked card
+  // instead of the lowest, since a very low card can still unexpectedly win a weak
+  // trick; fall back to the lowest only if there's no real middle option.
+  if (sorted.length >= 3) {
+    return sorted[Math.floor((sorted.length - 1) / 2)];
+  }
+  return sorted[0];
+}
+
+// Hard difficulty: "cheats" — sees every other player's actual hand, so it can determine
+// with certainty whether a candidate card is a true topper (nothing anyone still holding
+// cards for this trick could possibly beat it), rather than only checking what's already
+// been played so far.
+function isTrueTopperHard(candidate, playerIdx) {
+  const wizardAlreadyPlayed = G.currentTrick.some(pl => pl.card.type === 'wizard');
+  if (wizardAlreadyPlayed) return false; // the first Wizard already locked in the winner, and it's not us
+  if (candidate.type === 'wizard') return true; // first Wizard played always wins, guaranteed
+  if (candidate.type === 'jester') return false; // never a guaranteed winner
+
+  // What suit will be "led" once this candidate is played?
+  let effectiveLedSuit = G.ledSuit;
+  if (effectiveLedSuit === null && !G.wizardLedThisTrick) {
+    effectiveLedSuit = candidate.suit;
+  }
+
+  const playedSoFar = new Set(G.currentTrick.map(pl => pl.player));
+  const remainingOpponents = G.players.filter(pl => pl.id !== playerIdx && !playedSoFar.has(pl.id));
+
+  const savedLedSuit = G.ledSuit;
+  G.ledSuit = effectiveLedSuit;
+  let isTopper = true;
+  for (const opp of remainingOpponents) {
+    const oppLegal = legalPlays(opp.id);
+    for (const oc of oppLegal) {
+      if (oc.type === 'wizard') { isTopper = false; break; } // always legal, always beats a suit card
+      if (oc.type === 'jester') continue;
+      if (isHigher(oc, candidate)) { isTopper = false; break; }
+    }
+    if (!isTopper) break;
+  }
+  G.ledSuit = savedLedSuit;
+  return isTopper;
+}
+
+function cardPower(c) {
+  if (c.type === 'wizard') return 1000;
+  if (c.type === 'jester') return -1000;
+  let p = c.rank;
+  if (G.trumpSuit && c.suit === G.trumpSuit) p += 100;
+  return p;
+}
+
+// ---------- Scoring ----------
+function scoreHand() {
+  const vpBefore = {};
+  G.players.forEach(p => { vpBefore[p.id] = p.vp; });
+
+  G.players.forEach(p => {
+    const diff = Math.abs(p.tricksWon - p.bid);
+    const madeBid = diff === 0;
+    const bidVP = madeBid ? 50 : -5 * diff;
+    p.vp += bidVP;
+
+    // Star / Skull score individually regardless of bid outcome or team status (assumption — flagged to Ben)
+    p.vp += p.handStar;
+    p.vp += p.handSkull;
+    p.star += p.handStar;
+    p.skull += p.handSkull;
+
+    p.madeBidThisHand = madeBid;
+    p.arrowVoided = 0;
+
+    // Stash breakdown for the hand-summary display
+    p.lastHand = { bidVP, starVP: p.handStar, skullVP: p.handSkull, arrowVP: 0, vpBefore: vpBefore[p.id] };
+  });
+
+  // Arrow VP is team-gated: if AT LEAST ONE teammate made their bid, the whole team's
+  // combined Arrow VP (from every member, made-bid or not) pools and every teammate
+  // gets the full pool. If nobody on the team made their bid, the team's Arrow VP is
+  // voided entirely. Solo players never score Arrow VP regardless.
+  const teamIds = new Set(G.players.filter(p => p.team !== 'solo').map(p => p.team));
+  teamIds.forEach(teamId => {
+    const members = G.players.filter(p => p.team === teamId);
+    const qualifies = members.some(p => p.madeBidThisHand);
+    const pool = qualifies ? members.reduce((s, p) => s + p.handArrow, 0) : 0;
+    if (qualifies && pool > 0) {
+      members.forEach(p => { p.vp += pool; p.arrow += pool; p.lastHand.arrowVP = pool; });
+    } else if (!qualifies) {
+      members.forEach(p => { p.arrowVoided = p.handArrow; });
+    }
+  });
+  G.players.filter(p => p.team === 'solo').forEach(p => { p.arrowVoided = p.handArrow; });
+
+  G.players.forEach(p => { p.lastHand.total = p.vp - p.lastHand.vpBefore; });
+
+  G.phase = 'handSummary';
+  addLog('Hand scored.');
+  render();
+}
+
+// ---------- Rendering ----------
+function render() {
+  const app = document.getElementById('app');
+  if (!G || G.phase === 'setup') { app.innerHTML = renderSetup(); return; }
+  if (G.phase === 'gameEnd') { app.innerHTML = renderGameEnd(); return; }
+  app.innerHTML = renderGame();
+  if (G.phase === 'handSummary') renderHandSummaryModal();
+}
+
+function renderSetup() {
+  return `
+  <div class="panel">
+    <h1 class="title">Ben Wizard</h1>
+    <div class="subtitle">Bid the tricks. Master the trump. Wizards rule, Jesters fall.</div>
+    <label for="numPlayers">Number of Players (3–10)</label>
+    <select id="numPlayers">
+      ${[3,4,5,6,7,8,9,10].map(n => `<option value="${n}">${n} players</option>`).join('')}
+    </select>
+    <label for="difficulty">AI Difficulty</label>
+    <select id="difficulty">
+      <option value="easy">Easy</option>
+      <option value="medium" selected>Medium</option>
+      <option value="hard">Hard</option>
+    </select>
+    <div class="toggle-row">
+      <input type="checkbox" id="useMajors">
+      <label style="margin:0;" for="useMajors">Enable Major Arcana</label>
+    </div>
+    <div class="btn-row">
+      <button onclick="startGame()">Start Game</button>
+    </div>
+  </div>`;
+}
+
+function startGame() {
+  const n = parseInt(document.getElementById('numPlayers').value, 10);
+  const useMajors = document.getElementById('useMajors').checked;
+  const difficulty = document.getElementById('difficulty').value;
+  newGame(n, useMajors, difficulty);
+  render();
+  advanceGameFlow();
+}
+
+// Kicks off whatever the current phase needs (AI trump pick, AI bidding chain, AI play)
+function advanceGameFlow() {
+  if (G.phase === 'trumpChoice' && G.dealerIndex !== 0) {
+    setTimeout(() => {
+      const suit = aiChooseTrump(G.dealerIndex);
+      chooseTrump(suit);
+    }, 500);
+  } else if (G.phase === 'bidding') {
+    maybeAdvanceBidding();
+  } else if (G.phase === 'playing') {
+    maybeAITurn();
+  }
+}
+
+function aiChooseTrump(dealerIdx) {
+  const p = G.players[dealerIdx];
+  const counts = {};
+  p.hand.forEach(c => { if (c.type === 'suit') counts[c.suit] = (counts[c.suit] || 0) + 1; });
+  const cfg = PLAYER_CONFIG[G.numPlayers];
+  const suits = SUIT_DEFS.slice(0, cfg.suits).map(s => s.name);
+  let best = suits[0], bestCount = -1;
+  suits.forEach(s => { if ((counts[s] || 0) > bestCount) { bestCount = counts[s] || 0; best = s; } });
+  return best;
+}
+
+function renderGame() {
+  const human = G.players[0];
+  const opponents = G.players.filter(p => !p.isHuman);
+  const turnIdx = G.phase === 'playing' ? (G.leadPlayer + G.currentTrick.length) % G.numPlayers : -1;
+
+  let html = `<div class="panel">
+    <div class="hud">
+      <div>Round ${G.roundNum} · ${G.handSize} cards · Trick ${G.trickNum + 1}/${G.handSize}</div>
+      <div>${G.trumpSuit ? 'Trump: ' + suitIcon(G.trumpSuit) + ' ' + G.trumpSuit : 'No Trump'}</div>
+    </div>
+    <div class="table">
+      <div class="opponents-row">`;
+
+  opponents.forEach(p => {
+    html += `<div class="opp-badge ${turnIdx === p.id ? 'active' : ''} ${G.dealerIndex === p.id ? 'dealer' : ''}">
+      <div class="opp-name" style="color:${teamColor(p.team)};">${p.name} ${p.team === 'solo' ? '⭐' : ''}</div>
+      <div class="opp-info">${teamLabel(p.team)}</div>
+      <div class="opp-info">Bid: ${p.bid === null ? '-' : p.bid} · Won: ${p.tricksWon} · Cards: ${p.hand ? p.hand.length : 0}</div>
+      <div class="opp-info">VP: ${Math.round(p.vp)}${G.useMajors ? ' · ✦' + p.arcana.length : ''}</div>
+    </div>`;
+  });
+
+  html += `</div><div class="trick-area">`;
+  const currentWinner = G.currentTrick.length ? computeTrickWinner(G.currentTrick) : null;
+  // The player who set the led suit — first card played that's a real suited card
+  // (a Jester never sets the suit; if ALL cards played are Jesters, no one does).
+  const leadSuitPlay = G.currentTrick.find(pl => pl.card.type === 'suit');
+  const leadSuitPlayerId = leadSuitPlay ? leadSuitPlay.player : null;
+  G.currentTrick.forEach(pl => {
+    const isWinning = pl.player === currentWinner;
+    const isLeadSuit = pl.player === leadSuitPlayerId;
+    html += `<div class="played-card-slot ${isWinning ? 'winning' : ''}">
+      <div class="who" style="color:${teamColor(G.players[pl.player].team)};">${isLeadSuit ? '<span class="lead-suit-badge">🚩</span> ' : ''}${G.players[pl.player].name}${isWinning ? ' <span class="winning-badge">Winning</span>' : ''}</div>
+      ${renderCardHTML(pl.card, false)}
+    </div>`;
+  });
+  html += `</div></div>`;
+
+  html += `<div class="hud" style="margin-top:12px;">
+    <div><span style="color:${teamColor(human.team)}; font-weight:700;">You</span> ${G.dealerIndex === 0 ? '(Dealer)' : ''} ${human.team === 'solo' ? '⭐ Solo' : '· ' + teamLabel(human.team)}</div>
+    <div>Bid: ${human.bid === null ? '-' : human.bid} · Won: ${human.tricksWon} · VP: ${Math.round(human.vp)}</div>
+  </div>`;
+
+  if (G.useMajors && human.arcana.length) {
+    html += `<div class="hud" style="margin-top:6px; font-size:13px;">
+      <div>✦ Your Arcana Tableau: ${human.arcana.map(c => c.label).join(', ')}</div>
+    </div>`;
+  }
+
+  if (G.phase === 'trumpChoice' && G.dealerIndex === 0) {
+    html += renderInlineTrumpBar();
+  }
+
+  if (G.phase === 'bidding' && G.bidOrder[G.bidTurnPtr] === 0) {
+    html += renderInlineBidBar();
+  }
+
+  if (G.phase === 'maDraft' && G.maDraftOrder[G.maDraftIdx] === 0) {
+    html += renderInlineMADraftBar();
+  }
+
+  if (G.phase === 'playing' && G.useMajors && turnIdx === 0 && G.pendingSage && G.pendingSage.seat === 0) {
+    html += renderInlineSageBar();
+  } else if (G.phase === 'playing' && G.useMajors && turnIdx === 0 && !human.maActivatedThisTrick && human.arcana.length) {
+    html += renderInlineArcanaBar();
+  }
+
+  const legal = (G.phase === 'playing' && turnIdx === 0) ? legalPlays(0).map(c => c.id) : [];
+  html += `<div class="hand-row">`;
+  sortedHandFor(human.hand).forEach(c => {
+    const isLegal = G.phase === 'playing' && turnIdx === 0 && legal.includes(c.id);
+    html += renderCardHTML(c, true, isLegal, turnIdx === 0);
+  });
+  html += `</div>`;
+
+  html += `<div class="log">${G.log.slice(0, 8).map(l => '<div>' + l + '</div>').join('')}</div>`;
+  html += `</div>`;
+  return html;
+}
+
+function teamLabel(t) {
+  if (t === 'solo') return 'Solo';
+  if (t === 'A') return 'Team A';
+  if (t === 'B') return 'Team B';
+  if (t && t.indexOf('pair') === 0) return 'Team ' + t.replace('pair', '');
+  return t || '';
+}
+
+const PAIR_TEAM_PALETTE = ['#1a7a3a', '#7a3aa0', '#c07000', '#008a8a', '#a03060', '#5050b0'];
+function teamColor(t) {
+  if (t === 'solo') return '#a07800';
+  if (t === 'A') return '#1a5aaa';
+  if (t === 'B') return '#c81c1c';
+  if (t && t.indexOf('pair') === 0) {
+    const idx = parseInt(t.replace('pair', ''), 10) - 1;
+    return PAIR_TEAM_PALETTE[idx % PAIR_TEAM_PALETTE.length];
+  }
+  return 'inherit';
+}
+
+function suitIcon(name) {
+  const s = SUIT_DEFS.find(s => s.name === name);
+  return s ? s.icon : '';
+}
+
+function vpSymbolHTML(c) {
+  if (c.type === 'skip') return `<span style="opacity:0.3;">–</span>`;
+  if (c.type === 'wizard') return `<span class="vp-arrow">▲</span>`;
+  if (c.type === 'jester') return `<span class="vp-star">★</span><span class="vp-skull">☠</span>`;
+  if (c.cat === 'StarSkull') return `<span class="vp-star">★</span><span class="vp-skull">☠</span>`;
+  if (c.rank === 14) return `<span class="vp-arrow-neg">▼▼</span>`;
+  if (c.cat === 'Star') return c.rank === 1 ? `<span class="vp-star">★★</span>` : `<span class="vp-star">★</span>`;
+  if (c.rank === 5) return `<span class="vp-arrow">▲▲</span>`;
+  if (c.rank === 12) return `<span class="vp-skull">☠☠</span>`;
+  if (c.cat === 'Arrow') return `<span class="vp-arrow">▲</span>`;
+  if (c.cat === 'Skull') return `<span class="vp-skull">☠</span>`;
+  return `<span style="opacity:0.3;">–</span>`;
+}
+
+function renderCardHTML(c, clickable, isLegal, isHumanTurn) {
+  let cls = 'card';
+  let topLabel, midIcon;
+  if (c.type === 'skip') { topLabel = 'Skip'; midIcon = '—'; }
+  else if (c.type === 'wizard') { cls += ' wizard'; topLabel = 'Wiz'; midIcon = '✦'; }
+  else if (c.type === 'jester') { cls += ' jester'; topLabel = 'Jest'; midIcon = '♦'; }
+  else {
+    topLabel = c.face;
+    midIcon = `<span style="color:${c.suitColor}">${c.suitIcon}</span>`;
+    if (G.trumpSuit && c.suit === G.trumpSuit) cls += ' trump-suit';
+  }
+  const inner = `<div class="rank">${topLabel}</div><div class="icon">${midIcon}</div><div class="vp-symbol">${vpSymbolHTML(c)}</div>`;
+  const clickAttr = (clickable && isHumanTurn && isLegal) ? `onclick="playCard(0,'${c.id}')"` : '';
+  if (clickable && isHumanTurn && !isLegal) cls += ' disabled';
+  return `<div class="${cls}" ${clickAttr}>${inner}</div>`;
+}
+
+function renderInlineTrumpBar() {
+  const cfg = PLAYER_CONFIG[G.numPlayers];
+  const suits = SUIT_DEFS.slice(0, cfg.suits);
+  return `<div class="panel" style="padding:12px; margin:10px 0; display:flex; align-items:center; gap:10px; flex-wrap:wrap; border-color:var(--gold);">
+    <strong>You turned up a Wizard — choose Trump:</strong>
+    <div class="bid-choices" style="margin-top:0;">
+      ${suits.map(s => `<button onclick="chooseTrump('${s.name}')">${s.icon} ${s.name}</button>`).join('')}
+    </div>
+  </div>`;
+}
+
+function renderInlineBidBar() {
+  const max = G.handSize;
+  const restricted = [];
+  for (let b = 0; b <= max; b++) if (isRestrictedBid(0, b)) restricted.push(b);
+  let options = '';
+  for (let b = 0; b <= max; b++) {
+    options += `<option value="${b}" ${restricted.includes(b) ? 'disabled' : ''}>${b}</option>`;
+  }
+  return `<div class="panel" style="padding:12px; margin:10px 0; display:flex; align-items:center; gap:10px; flex-wrap:wrap; border-color:var(--gold);">
+    <strong>Your Bid:</strong>
+    <select id="bidSelect">${options}</select>
+    <button onclick="confirmHumanBid()">Submit Bid</button>
+    ${restricted.length ? `<span style="font-size:12px;color:var(--text-dim);">(Cannot bid ${restricted.join(', ')} — dealer restriction)</span>` : ''}
+  </div>`;
+}
+
+function confirmHumanBid() {
+  const sel = document.getElementById('bidSelect');
+  if (!sel) return;
+  const b = parseInt(sel.value, 10);
+  humanBid(b);
+}
+
+function renderInlineMADraftBar() {
+  return `<div class="panel" style="padding:12px; margin:10px 0; border-color:var(--gold);">
+    <strong>✦ Arcana Draft — pick one card:</strong>
+    <div class="bid-choices" style="margin-top:10px;">
+      ${G.maAuctionTable.map(c => `<button onclick="maDraftPick(0,'${c.id}')" title="${c.desc}">${c.label}</button>`).join('')}
+    </div>
+  </div>`;
+}
+
+function renderInlineArcanaBar() {
+  const human = G.players[0];
+  return `<div class="panel" style="padding:12px; margin:10px 0; border-color:var(--gold);">
+    <strong>✦ Activate an Arcana card (optional, one per trick):</strong>
+    <div class="bid-choices" style="margin-top:10px;">
+      ${human.arcana.map(c => `<button onclick="humanActivateMA('${c.id}')" title="${c.desc}">${c.label}</button>`).join('')}
+    </div>
+  </div>`;
+}
+
+function humanActivateMA(cardId) {
+  activateMA(0, cardId);
+}
+
+function renderInlineSageBar() {
+  return `<div class="panel" style="padding:12px; margin:10px 0; border-color:var(--gold);">
+    <strong>✦ The Sage — pick a rank:</strong>
+    <div class="bid-choices" style="margin-top:10px;">
+      ${[8, 9, 10].map(r => `<button onclick="finishSageActivation(0,'${G.pendingSage.cardId}',${r})">Rank ${r}</button>`).join('')}
+    </div>
+  </div>`;
+}
+
+function humanBid(b) {
+  submitBid(0, b);
+  render();
+  maybeAdvanceBidding();
+}
+
+function renderHandSummaryModal() {
+  const div = document.createElement('div');
+  div.className = 'msg-modal';
+  let rows = G.players.map(p => `
+    <tr>
+      <td style="color:${teamColor(p.team)}; font-weight:700;">${p.name}</td>
+      <td style="color:${teamColor(p.team)}; font-weight:700;">${teamLabel(p.team)}</td>
+      <td>${p.bid}</td>
+      <td>${p.tricksWon}</td>
+      <td class="${p.madeBidThisHand ? 'made-bid' : 'missed-bid'}">${p.madeBidThisHand ? 'Made' : 'Missed'}</td>
+      <td class="vp-star">${Math.round(p.lastHand.starVP)}</td>
+      <td class="vp-skull">${Math.round(p.lastHand.skullVP)}</td>
+      <td class="vp-arrow">${Math.round(p.lastHand.arrowVP)}${p.arrowVoided ? ` <span style="color:var(--red); font-size:11px;">(voided ${Math.round(p.arrowVoided)})</span>` : ''}</td>
+      <td class="${p.lastHand.bidVP >= 0 ? 'made-bid' : 'missed-bid'}">${p.lastHand.bidVP >= 0 ? '+' : ''}${p.lastHand.bidVP}</td>
+      <td><strong>${p.lastHand.total >= 0 ? '+' : ''}${Math.round(p.lastHand.total)}</strong></td>
+      <td><strong>${Math.round(p.vp)}</strong></td>
+    </tr>`).join('');
+  div.innerHTML = `<div class="msg-box" style="max-width:720px;">
+    <h3>Round ${G.roundNum} Results</h3>
+    <div style="overflow-x:auto;">
+    <table class="scoreboard">
+      <tr><th>Player</th><th>Team</th><th>Bid</th><th>Won</th><th>Result</th><th>★</th><th>☠</th><th>▲</th><th>Bid VP</th><th>Hand VP</th><th>Grand Total</th></tr>
+      ${rows}
+    </table>
+    </div>
+    <div class="btn-row" style="justify-content:center; margin-top:16px;">
+      <button onclick="continueGame()">Continue</button>
+    </div>
+  </div>`;
+  document.getElementById('app').appendChild(div);
+}
+
+function continueGame() {
+  newHand();
+  render();
+  advanceGameFlow();
+}
+
+function renderGameEnd() {
+  const sorted = G.players.slice().sort((a, b) => b.vp - a.vp);
+  return `<div class="panel">
+    <h1 class="title">Game Over</h1>
+    <table class="scoreboard">
+      <tr><th>Rank</th><th>Player</th><th>VP</th></tr>
+      ${sorted.map((p, i) => `<tr><td>${i+1}</td><td>${p.name}</td><td>${Math.round(p.vp)}</td></tr>`).join('')}
+    </table>
+    <div class="btn-row"><button onclick="location.reload()">New Game</button></div>
+  </div>`;
+}
+
+render();
+</script>
+</body>
+</html>
